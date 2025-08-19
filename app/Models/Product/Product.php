@@ -2,6 +2,7 @@
 
 namespace App\Models\Product;
 
+use App\Models\cart;
 use App\Models\Category\Category;
 use App\Models\ProductImage\ProductImage;
 use App\Models\SubCategory\SubCategory;
@@ -40,5 +41,10 @@ class Product extends Model
     public function images()
     {
         return $this->hasMany(ProductImage::class);
+    }
+
+    public function carts()
+    {
+        return $this->hasMany(cart::class, 'product_id');
     }
 }

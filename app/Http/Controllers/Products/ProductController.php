@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Products;
 
 use App\Http\Controllers\Controller;
+use App\Models\Category\Category;
 use App\Models\Product\Product;
 use App\Models\ProductImage\ProductImage;
 use Exception;
@@ -20,7 +21,7 @@ class ProductController extends Controller
         try {
             $validator = Validator::make($request->all(), [
                 'category_id'      => 'required|exists:categories,id',
-                'subcategory_id'   => 'required|exists:sub_categories,id',
+                'subcategory_id'   => 'nullable|exists:sub_categories,id',
                 'name'             => 'required|string|max:255',
                 'description'      => 'nullable|string',
                 'clay_type'        => 'nullable|string',
@@ -195,9 +196,52 @@ class ProductController extends Controller
                 ]);
             }
 
-        
+            // return $abc = Product::with('images')->where('id', 1)->get();
+            // We are deliberately fetching based on a static string for 4 cards.
+            $category = Category::whereRaw(
+                'LOWER(REPLACE(name, " ", "")) = ?',
+                [strtolower(str_replace(" ", "", $request->category_title))]
+                )->first();
+
+            $products = [];
+            if ($category) {
+                $products = Product::with('images')
+                    ->where('category_id', $category->id)
+                    ->get();
+            }
+
+            return response()->json([
+                'status' => 200,
+                'message' => 'Products fetched successfully',
+                'data' => $products
+            ]);
+        } catch (Exception $e) {
+            return response()->json([
+                'status' => 500,
+                'message' => 'Something went wrong in server',
+                'err' => $e->getMessage()
+            ]);
+        }
+    }
+
+    public function fetchMultipleProducts(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'ids' => 'required|array',
+                'ids.*' => 'exists:products,id',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'status' => 400,
+                    'message' => 'Validation failed',
+                    'err' => $validator->errors(),
+                ]);
+            }
+
             $products = Product::with('images')
-                ->whereRaw('LOWER(name) = ?', [strtolower($request->category_title)])
+                ->whereIn('id', $request->ids)
                 ->get();
 
             return response()->json([
