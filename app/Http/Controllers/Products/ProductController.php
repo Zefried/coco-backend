@@ -34,6 +34,8 @@ class ProductController extends Controller
                 'stock_quantity'   => 'required|integer',
                 'is_fragile'       => 'required',
                 'is_handmade'      => 'required',
+                'color'        => 'nullable|string|max:255',
+                'youtube_link' => 'nullable|string|max:255',
                 'images'           => 'required|array|max:5',
                 'images.*'         => 'image|mimes:jpeg,png,jpg,gif|max:2048',
             ]);
@@ -61,6 +63,8 @@ class ProductController extends Controller
                 'stock_quantity'   => $request->stock_quantity,
                 'is_fragile'       => $request->boolean('is_fragile'),
                 'is_handmade'      => $request->boolean('is_handmade'),
+                'color'        => $request->color,
+                'youtube_link' => $request->youtube_link,
             ]);
 
             $this->storeImages($request, $product->id);
