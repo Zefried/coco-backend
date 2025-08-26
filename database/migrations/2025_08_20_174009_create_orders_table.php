@@ -14,17 +14,19 @@ return new class extends Migration
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('user_id')->index();
-            $table->unsignedBigInteger('product_id')->nullable()->index();
-            $table->integer('quantity')->nullable();
+            $table->json('products')->nullable(); // stores product IDs + quantities + unit prices as JSON
             $table->text('address')->nullable();
-            $table->unsignedBigInteger('payment_id')->nullable();
+            $table->string('pin')->nullable();
+            $table->string('item_name')->nullable();
+            $table->string('payment_id')->nullable(); // alphanumeric payment ID
             $table->string('delivery_status')->nullable()->index();
             $table->string('payment_status')->nullable()->index();
+            $table->string('coupon_code')->nullable();  
+            $table->string('coupon_discount')->nullable();
             $table->timestamp('order_date')->nullable()->index();
             $table->timestamps();
 
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
-            $table->foreign('product_id')->references('id')->on('products')->onDelete('set null');
         });
 
         

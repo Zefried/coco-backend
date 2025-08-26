@@ -17,8 +17,7 @@ return new class extends Migration
             $table->decimal('total_amount', 10, 2)->nullable();
             $table->string('payment_method')->nullable()->index();
             $table->string('transaction_id')->nullable()->index();
-            $table->decimal('discount', 10, 2)->nullable()->index();
-            $table->decimal('unit_price', 10, 2)->nullable()->index();
+            
             $table->timestamps();
             
             $table->foreign('order_id')->references('id')->on('orders')->onDelete('cascade');

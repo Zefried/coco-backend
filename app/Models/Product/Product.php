@@ -13,6 +13,9 @@ class Product extends Model
    
      protected $fillable = [
         'category_id',
+        'disable',
+        'color',
+        'youtube_link',
         'subcategory_id',
         'name',
         'description',
@@ -25,7 +28,7 @@ class Product extends Model
         'discount_percent',
         'stock_quantity',
         'is_fragile',
-        'is_handmade'
+        'is_handmade',
     ];
 
     public function category()

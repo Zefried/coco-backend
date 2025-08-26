@@ -28,6 +28,11 @@ return new class extends Migration
             $table->string('stock_quantity')->nullable();
             $table->boolean('is_fragile')->default(false)->nullable();
             $table->boolean('is_handmade')->default(false)->nullable();
+
+               // New fields
+            $table->boolean('disable')->default(false)->nullable();
+            $table->string('color')->nullable();
+            $table->string('youtube_link')->nullable();
             $table->timestamps();
 
             $table->foreign('category_id')->references('id')->on('categories')->onDelete('cascade');

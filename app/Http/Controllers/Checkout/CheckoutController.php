@@ -4,9 +4,13 @@ namespace App\Http\Controllers\Checkout;
 
 use App\Http\Controllers\Controller;
 use App\Models\cart;
+use App\Models\Order\Order;
+use App\Models\Payment\Payment;
 use App\Models\Product\Product;
+use App\Models\ProductImage\ProductImage;
 use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 class CheckoutController extends Controller
@@ -153,54 +157,131 @@ class CheckoutController extends Controller
         }
     }
 
-
-    public function checkout(request $request)
+    public function checkout(Request $request)
     {
-
-        return $request->all();
         try {
             $validator = Validator::make($request->all(), [
-                'billingInfo' => 'required|array',
-                'billingInfo.name' => 'required|string|max:255',
-                'billingInfo.email' => 'required|email|max:255',
-                'billingInfo.phone' => 'required|string|max:20',
-                'billingInfo.address' => 'required|string|max:500',
-
-                'shippingInfo' => 'required|array',
-                'shippingInfo.name' => 'required|string|max:255',
-                'shippingInfo.email' => 'required|email|max:255',
-                'shippingInfo.phone' => 'required|string|max:20',
-                'shippingInfo.address' => 'required|string|max:500',
-
-                'paymentMethod' => 'required|string|in:now,later',
-                'transactionId' => 'nullable|string|max:100',
+                'billingInfo.name' => 'required|string',
+                'billingInfo.phone' => 'required|string',
+                'billingInfo.address' => 'required|string',
+                'billingInfo.pincode' => 'required|string',
+                'paymentMethod' => 'required|in:now,later',
+                'checkoutItems' => 'required|array|min:1',
             ]);
 
             if ($validator->fails()) {
                 return response()->json([
-                    'status'  => 400,
-                    'message' => 'Validation failed',
-                    'err'     => $validator->errors(),
+                    'status' => 500,
+                    'message' => 'validation failed',
+                    'err' => $validator->errors()
                 ]);
             }
 
-          
+            DB::beginTransaction();
+
+            $userId = $request->user()->id;
+            $products = [];
+
+            $totalAmount = 0;
+
+            foreach ($request->checkoutItems as $item) {
+                $product = $item['product'];
+                $quantity = $item['quantity'];
+                $unitPrice = $product['price'];
+
+                $products[] = [
+                    'product_id' => $product['id'],
+                    'quantity' => $quantity,
+                    'unit_price' => $unitPrice
+                ];
+
+                $totalAmount += $quantity * $unitPrice;
+            }
+
+            $order = Order::create([
+                'user_id' => $userId,
+                'products' => json_encode($products),
+                'address' => $request->billingInfo['address'],
+                'pin' => $request->billingInfo['pincode'],
+                'item_name' => implode(', ', array_map(fn($item) => $item['product']['name'], $request->checkoutItems)),
+                'payment_id' => $request->transactionId,
+                'delivery_status' => 'pending',
+                'payment_status' => $request->paymentMethod === 'now' ? 'paid' : 'pending',
+                'order_date' => now()
+            ]);
+
+            Payment::create([
+                'order_id' => $order->id,
+                'total_amount' => $totalAmount,
+                'payment_method' => $request->paymentMethod,
+                'transaction_id' => $request->transactionId
+            ]);
+
+            DB::commit();
 
             return response()->json([
-                'status'  => 200,
-                'message' => 'Checkout successful',
-                'data'    => $validator->validated(),
+                'status' => 200,
+                'message' => 'Checkout completed successfully',
+                'data' => [
+                    'order_id' => $order->id,
+                    'total_amount' => $totalAmount
+                ]
+            ]);
+
+        } catch (Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'status' => 500,
+                'message' => 'something went wrong in server',
+                'err' => $e->getMessage()
+            ]);
+        }
+    }
+
+    public function userOrders(Request $request)
+    {
+        try {
+            $userId = $request->user()->id;
+            $orders = Order::where('user_id', $userId)->with('payment')->get();
+
+            $productIds = [];
+            foreach ($orders as $ord) {
+                $decoded = $ord->products ? json_decode($ord->products, true) : [];
+                foreach ($decoded as $p) {
+                    $productIds[] = $p['product_id'];
+                }
+            }
+
+            $images = ProductImage::whereIn('product_id', $productIds)->get();
+
+            foreach ($orders as $ord) {
+                $decoded = $ord->products ? json_decode($ord->products, true) : [];
+                foreach ($decoded as &$p) {
+                    $p['images'] = $images->where('product_id', $p['product_id'])->values();
+                }
+                $ord->products = $decoded;
+            }
+
+            return response()->json([
+                'status' => 200,
+                'message' => 'User products fetched successfully',
+                'data' => $orders
             ]);
 
         } catch (Exception $e) {
             return response()->json([
-                'status'  => 500,
-                'message' => 'Something went wrong on the server',
-                'err'     => $e->getMessage(),
+                'status' => 500,
+                'message' => 'something went wrong in server',
+                'err' => $e->getMessage()
             ]);
         }
-
     }
+
+
+
+
+
+
 
 
 

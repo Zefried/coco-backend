@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AdminAuth\AdminAuthController;
+use App\Http\Controllers\AdminOrders\AdminOrderController;
 use App\Http\Controllers\Category\CategoryController;
 use App\Http\Controllers\Checkout\CheckoutController;
 use App\Http\Controllers\Products\ProductController;
@@ -29,6 +30,13 @@ Route::middleware(['auth:sanctum', AdminCheck::class])->prefix('admin')->group(f
     Route::post('/add-product', [ProductController::class, 'store']);
     Route::post('/fetch-products/category', [ProductController::class, 'viewProducts']);
     Route::post('/fetch-products/subcategory', [ProductController::class, 'viewProducts']);
+
+    Route::get('/user/orders', [AdminOrderController::class, 'fetchAllUserOrders']);
+    Route::patch('/orders/{id}/status', [AdminOrderController::class, 'updateOrderStatus']);
+
+    Route::get('/orders/search', [AdminOrderController::class, 'searchOrders']); // all orders
+    Route::get('/orders/search/{orderId}', [AdminOrderController::class, 'selectOrder']); // single orders
+    Route::get('/orders/info/{orderId}', [AdminOrderController::class, 'findFullInfo']); // order full info
     
 });
 
@@ -40,6 +48,8 @@ Route::middleware('auth:sanctum')->prefix('user')->group(function () {
 
     Route::post('/checkout-items', [CheckoutController::class, 'getCheckoutItems']);
     Route::post('/checkout', [CheckoutController::class, 'checkout']);
+
+    Route::get('/orders', [CheckoutController::class, 'userOrders']);
 });
 
 // These routes have no middleware 
