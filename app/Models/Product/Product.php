@@ -29,6 +29,7 @@ class Product extends Model
         'stock_quantity',
         'is_fragile',
         'is_handmade',
+        'best_seller',
     ];
 
     public function category()

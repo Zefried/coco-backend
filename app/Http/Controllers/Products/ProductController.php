@@ -262,5 +262,72 @@ class ProductController extends Controller
         }
     }
 
+    public function updateBestSeller(Request $request, $id)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'best_seller' => 'required|boolean',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'status' => 500,
+                    'message' => 'validation failed',
+                    'err' => $validator->errors(),
+                ]);
+            }
+
+            $product = Product::findOrFail($id);
+            $product->best_seller = $request->best_seller;
+            $product->save();
+
+            return response()->json([
+                'status' => 200,
+                'message' => 'best seller status updated',
+                'data' => $product,
+            ]);
+        } catch (Exception $e) {
+            return response()->json([
+                'status' => 500,
+                'message' => 'something went wrong in server',
+                'err' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    public function productImageChange(Request $request, $imageId)
+    {
+        $request->validate([
+            'image' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048'
+        ]);
+
+        $imageRecord = ProductImage::findOrFail($imageId);
+
+        if ($request->hasFile('image')) {
+            $oldPath = public_path('images/' . $imageRecord->image);
+            if (File::exists($oldPath)) {
+                File::delete($oldPath);
+            }
+
+            $file = $request->file('image');
+            $filename = time().'_'.$file->getClientOriginalName();
+            $file->move(public_path('images'), $filename);
+
+            // update DB
+            $imageRecord->image = $filename;
+            $imageRecord->save();
+        }
+
+        return response()->json([
+            'status' => 200,
+            'message' => 'Product image updated successfully',
+            'data' => [
+                'id' => $imageRecord->id,
+                'product_id' => $imageRecord->product_id,
+                'image' => $imageRecord->image
+            ]
+        ]);
+    }
+
 
 }

@@ -30,6 +30,12 @@ Route::middleware(['auth:sanctum', AdminCheck::class])->prefix('admin')->group(f
     Route::post('/add-product', [ProductController::class, 'store']);
     Route::post('/fetch-products/category', [ProductController::class, 'viewProducts']);
     Route::post('/fetch-products/subcategory', [ProductController::class, 'viewProducts']);
+    Route::post('/product/{id}/status', [ProductController::class, 'updateBestSeller']);
+
+    // Edit products
+    Route::post('/product/image/{id}', [ProductController::class, 'productImageChange']);
+
+    // Orders
 
     Route::get('/user/orders', [AdminOrderController::class, 'fetchAllUserOrders']);
     Route::patch('/orders/{id}/status', [AdminOrderController::class, 'updateOrderStatus']);
@@ -37,7 +43,7 @@ Route::middleware(['auth:sanctum', AdminCheck::class])->prefix('admin')->group(f
     Route::get('/orders/search', [AdminOrderController::class, 'searchOrders']); // all orders
     Route::get('/orders/search/{orderId}', [AdminOrderController::class, 'selectOrder']); // single orders
     Route::get('/orders/info/{orderId}', [AdminOrderController::class, 'findFullInfo']); // order full info
-    
+   
 });
 
 
