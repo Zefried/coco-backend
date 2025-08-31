@@ -110,7 +110,6 @@ class AdminOrderController extends Controller
             ->limit(50)
             ->get();
 
-
         return response()->json([
             'status'  => 200,
             'message' => 'Orders fetched successfully',

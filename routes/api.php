@@ -28,12 +28,16 @@ Route::middleware(['auth:sanctum', AdminCheck::class])->prefix('admin')->group(f
     Route::post('/fetch-sub-category', [SubCategoryController::class, 'fetchSubCategory']);
 
     Route::post('/add-product', [ProductController::class, 'store']);
-    Route::post('/fetch-products/category', [ProductController::class, 'viewProducts']);
-    Route::post('/fetch-products/subcategory', [ProductController::class, 'viewProducts']);
+    Route::get('/fetch-products/category', [ProductController::class, 'viewProducts']);
+    Route::get('/fetch-products/subcategory', [ProductController::class, 'viewProducts']);
     Route::post('/product/{id}/status', [ProductController::class, 'updateBestSeller']);
+    Route::get('/products/search', [ProductController::class, 'searchProducts']);
+    Route::get('/products/search/{id}', [ProductController::class, 'searchProductsById']);
 
     // Edit products
     Route::post('/product/image/{id}', [ProductController::class, 'productImageChange']);
+    Route::post('/product/update/{id}', [ProductController::class, 'updateProduct']);
+
 
     // Orders
 
@@ -58,7 +62,9 @@ Route::middleware('auth:sanctum')->prefix('user')->group(function () {
     Route::get('/orders', [CheckoutController::class, 'userOrders']);
 });
 
-// These routes have no middleware 
+
+
+// public routes
 Route::post('/auth-resource', [AdminAuthController::class, 'resource']);
 Route::post('/user-register', [UserAuthController::class, 'userRegister']);
 Route::post('/user-login', [UserAuthController::class, 'userLogin']);
@@ -67,6 +73,6 @@ Route::post('/user-login', [UserAuthController::class, 'userLogin']);
 Route::post('/fetch-products/static-categories', [ProductController::class, 'fetchByStaticCategory']);
 Route::get('/product/{id}', [ProductController::class, 'fetchSingleProduct']);
 Route::post('/fetch-products', [ProductController::class, 'fetchMultipleProducts']);
-
+Route::get('/best-sellers', [ProductController::class, 'fetchBestSellers']);
 
 

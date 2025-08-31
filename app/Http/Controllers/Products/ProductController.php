@@ -14,6 +14,8 @@ use Illuminate\Support\Facades\DB;
 
 class ProductController extends Controller
 {
+
+    // its admin product controller 
     public function store(Request $request)
     {
         DB::beginTransaction();
@@ -29,11 +31,11 @@ class ProductController extends Controller
                 'glaze_type'       => 'nullable|string',
                 'dimensions'       => 'nullable|string',
                 'weight'           => 'nullable|string',
-                'price'            => 'required|numeric',
+                'price'            => 'nullable|numeric',
                 'discount_percent' => 'nullable|numeric',
                 'stock_quantity'   => 'required|integer',
-                'is_fragile'       => 'required',
-                'is_handmade'      => 'required',
+                'is_fragile'       => 'nullable',
+                'is_handmade'      => 'nullable',
                 'color'        => 'nullable|string|max:255',
                 'youtube_link' => 'nullable|string|max:255',
                 'images'           => 'required|array|max:5',
@@ -116,46 +118,48 @@ class ProductController extends Controller
 
     public function viewProducts(Request $request)
     {
-    try {
-        if ($request->has('sub_category_id')) {
-            $products = Product::with('images')
-                ->where('subcategory_id', $request->sub_category_id)
+        try {
+            $page = (int) $request->query('page', 1);
+            $perPage = (int) $request->query('perPage', 5);
+            $skip = ($page - 1) * $perPage;
+
+            $query = Product::with('images');
+
+            if ($request->has('sub_category_id')) {
+                $query->where('subcategory_id', $request->sub_category_id);
+            } elseif ($request->has('category_id')) {
+                $query->where('category_id', $request->category_id);
+            } else {
+                return response()->json([
+                    'status' => 400,
+                    'message' => 'No category_id or sub_category_id provided',
+                    'data' => []
+                ]);
+            }
+
+            $totalProducts = $query->count();
+
+            $products = $query->skip($skip)
+                ->take($perPage)
                 ->get();
 
             return response()->json([
                 'status' => 200,
-                'message' => 'Products by subcategory fetched successfully',
-                'data' => $products
+                'message' => 'Products fetched successfully',
+                'data' => [
+                    'products' => $products,
+                    'totalPages' => ceil($totalProducts / $perPage)
+                ]
             ]);
-        }
-
-        if ($request->has('category_id')) {
-            $products = Product::with('images')
-                ->where('category_id', $request->category_id)
-                ->get();
-
+        } catch (Exception $e) {
             return response()->json([
-                'status' => 200,
-                'message' => 'Products by category fetched successfully',
-                'data' => $products
+                'status' => 500,
+                'message' => 'Something went wrong in server',
+                'err' => $e->getMessage()
             ]);
         }
-
-        return response()->json([
-            'status' => 400,
-            'message' => 'No category_id or sub_category_id provided',
-            'data' => []
-        ]);
-    } catch (Exception $e) {
-        return response()->json([
-            'status' => 500,
-            'message' => 'Something went wrong in server',
-            'err' => $e->getMessage()
-        ]);
-    }
     }
 
- 
     public function fetchSingleProduct($id)
     {
         try {
@@ -328,6 +332,104 @@ class ProductController extends Controller
             ]
         ]);
     }
+
+    public function searchProducts(Request $request){
+        $query = $request->input('q'); // matches frontend
+
+        if (!$query) {
+            return response()->json([
+                'status'  => 200,
+                'message' => 'No query provided',
+                'data'    => []
+            ]);
+        }
+
+        $searchData = Product::where('name', 'LIKE', '%'.$query.'%')
+        ->limit(50)
+        ->get();
+
+        return response()->json([
+            'status'  => 200,
+            'message' => 'Products fetched successfully',
+            'data'    => $searchData
+        ]);
+    }
+
+    public function searchProductsById($id){
+        $product = Product::with('images')->where('id', $id)->first();
+
+        if (!$product) {
+            return response()->json([
+                'status'  => 404,
+                'message' => 'Product not found',
+                'data'    => null
+            ]);
+        }
+
+        return response()->json([
+            'status'  => 200,
+            'message' => 'Product fetched successfully',
+            'data'    => $product
+        ]);
+    }
+
+    public function updateProduct(Request $request, $id)
+    {
+        try {
+            $product = Product::findOrFail($id);
+
+            // 🔹 Only updateable fields (category_id excluded)
+            $updatable = [
+                'disable','color','youtube_link','subcategory_id','name',
+                'description','clay_type','firing_method','glaze_type',
+                'dimensions','weight','price','discount_percent',
+                'stock_quantity','is_fragile','is_handmade','best_seller'
+            ];
+
+            foreach ($updatable as $field) {
+                if ($request->has($field)) {
+                    $product->$field = $request->$field;
+                }
+            }
+
+            $product->save();
+
+            return response()->json([
+                'status'  => 200,
+                'message' => 'Product updated successfully',
+                'data'    => $product
+            ]);
+        } catch (Exception $e) {
+            return response()->json([
+                'status'  => 500,
+                'message' => 'something went wrong in server',
+                'err'     => $e->getMessage()
+            ]);
+        }
+    }
+
+
+    // Public functions 
+    public function fetchBestSellers()
+    {
+        try {
+            $bestSellers = Product::with('images')
+                ->where('best_seller', true)
+                ->get();
+
+            return response()->json([
+                'status' => 200,
+                'message' => 'Best sellers fetched successfully',
+                'data' => $bestSellers
+            ]);
+        } catch (Exception $e) {
+            return response()->json([
+                'status' => 500,
+                'message' => 'Something went wrong in server',
+                'err' => $e->getMessage()
+            ]);
+        }
+    } 
 
 
 }
