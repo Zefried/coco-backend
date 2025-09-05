@@ -162,18 +162,37 @@ class AdminOrderController extends Controller
                     'message' => 'Order not found',
                 ]);
             }
+            $userId = $orderData->user_id;
+            $userInfo = User::find($userId, ['name', 'email', 'phone']); 
+
+            if (!$userInfo) {
+                return response()->json([
+                    'status'  => 500,
+                    'message' => 'User not found',
+                ]);
+            }
 
             $decoded = json_decode($orderData->products, true) ?? [];
-            
-            $productData = Product::whereIn('id', array_map(fn($p) => $p['product_id'], $decoded))
+            $productData = Product::whereIn('id', array_column($decoded, 'product_id'))
                 ->with('images')
-                ->get();
+                ->get()
+                ->map(fn($p) => [
+                    'id' => $p->id,
+                    'name' => $p->name,
+                    'images' => $p->images,
+                    'quantity' => collect($decoded)->firstWhere('product_id', $p->id)['quantity'] ?? 0
+                ]);
 
             return response()->json([
-                'status'  => 200,
+                'status' => 200,
                 'message' => 'Order full info fetched successfully',
-                'data'    => [$productData, $orderData],
+                'data' => [
+                    'order' => $orderData,
+                    'user' => $userInfo,
+                    'products' => $productData
+                ]
             ]);
+
         } catch (Exception $e) {
             return response()->json([
                 'status'  => 500,

@@ -73,7 +73,6 @@ class CheckoutController extends Controller
         }
     }
 
-
     public function removeCartItem(Request $request) 
     {
     
@@ -119,6 +118,32 @@ class CheckoutController extends Controller
             ]);
         }
     }
+
+    public function userCart(Request $request)
+    {
+        try {
+            $userId = $request->user()->id;
+            $productIds = $request->input('product_ids', []);
+
+            $cartItems = Cart::where('user_id', $userId)
+                ->when(!empty($productIds), fn($q) => $q->whereIn('product_id', $productIds))
+                ->with('product')
+                ->get();
+
+            return response()->json([
+                'status'  => 200,
+                'message' => 'Cart items fetched successfully',
+                'data'    => $cartItems,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status'  => 500,
+                'message' => 'Something went wrong on the server',
+                'error'   => 'Internal Server Error'
+            ]);
+        }
+    }
+
 
     public function getCheckoutItems(Request $request)
     {
@@ -276,6 +301,8 @@ class CheckoutController extends Controller
             ]);
         }
     }
+
+
 
 
 
