@@ -55,7 +55,7 @@ Route::middleware(['auth:sanctum', AdminCheck::class])->prefix('admin')->group(f
 Route::middleware('auth:sanctum')->prefix('user')->group(function () {
     Route::post('/add-user-cart', [CheckoutController::class, 'addUserCart']);
     Route::post('/remove-cart-item', [CheckoutController::class, 'removeCartItem']);
-    Route::post('/user/cart', [CheckoutController::class, 'userCart']);
+    Route::post('/cart', [CheckoutController::class, 'userCart']);
 
     Route::post('/checkout-items', [CheckoutController::class, 'getCheckoutItems']);
     Route::post('/checkout', [CheckoutController::class, 'checkout']);

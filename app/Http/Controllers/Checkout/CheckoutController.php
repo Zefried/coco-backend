@@ -121,14 +121,16 @@ class CheckoutController extends Controller
 
     public function userCart(Request $request)
     {
+
         try {
             $userId = $request->user()->id;
+           
             $productIds = $request->input('product_ids', []);
 
             $cartItems = Cart::where('user_id', $userId)
-                ->when(!empty($productIds), fn($q) => $q->whereIn('product_id', $productIds))
-                ->with('product')
-                ->get();
+            ->when($productIds, fn($q) => $q->whereIn('product_id', $productIds))
+            ->with('product')
+            ->get();
 
             return response()->json([
                 'status'  => 200,
