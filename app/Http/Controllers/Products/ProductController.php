@@ -206,10 +206,13 @@ class ProductController extends Controller
 
             // return $abc = Product::with('images')->where('id', 1)->get();
             // We are deliberately fetching based on a static string for 4 cards.
+            $normalized = strtolower(str_replace([' ', '-'], '', $request->category_title));
+
             $category = Category::whereRaw(
-                'LOWER(REPLACE(name, " ", "")) = ?',
-                [strtolower(str_replace(" ", "", $request->category_title))]
-                )->first();
+                    'LOWER(REPLACE(REPLACE(name, " ", ""), "-", "")) = ?', [$normalized]
+                )
+                ->orWhere('slug', strtolower($request->category_title))
+                ->first();
 
             $products = [];
             if ($category) {

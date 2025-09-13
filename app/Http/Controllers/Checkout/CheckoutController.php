@@ -125,13 +125,10 @@ class CheckoutController extends Controller
         try {
             $userId = $request->user()->id;
            
-            $productIds = $request->input('product_ids', []);
-
             $cartItems = Cart::where('user_id', $userId)
-            ->when($productIds, fn($q) => $q->whereIn('product_id', $productIds))
             ->with('product')
             ->get();
-
+            
             return response()->json([
                 'status'  => 200,
                 'message' => 'Cart items fetched successfully',
@@ -302,6 +299,38 @@ class CheckoutController extends Controller
                 'err' => $e->getMessage()
             ]);
         }
+    }
+
+    public function updateCartQuantity(Request $request)
+    {
+        try{
+            $userId = $request->user()->id;
+            $item = Cart::where('product_id', $request->product_id)->first();
+
+            if ($item) {
+                $item->quantity = $request->input('quantity');
+                $item->save();
+            } else {
+                $item = Cart::create([
+                    'user_id' => $userId,
+                    'product_id' => $request->input('product_id'),
+                    'quantity'   => $request->input('quantity'),
+                ]);
+            }
+
+            return response()->json([
+                'status' => 200,
+                'message' => 'Cart updated successfully',
+                'data' => $item
+            ]);
+                
+        }catch(Exception $e){
+            return response()->json([
+                'status' => 500,
+                'message' => 'problem in updateCartQuantity method'
+            ]);
+        }
+        
     }
 
 
