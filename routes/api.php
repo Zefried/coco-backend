@@ -5,6 +5,7 @@ use App\Http\Controllers\AdminOrders\AdminOrderController;
 use App\Http\Controllers\Category\CategoryController;
 use App\Http\Controllers\Checkout\CheckoutController;
 use App\Http\Controllers\Products\ProductController;
+use App\Http\Controllers\Reports\ReportController;
 use App\Http\Controllers\SubCategory\SubCategoryController;
 use App\Http\Controllers\UserAuth\UserAuthController;
 use App\Http\Middleware\AdminCheck;
@@ -40,13 +41,14 @@ Route::middleware(['auth:sanctum', AdminCheck::class])->prefix('admin')->group(f
 
 
     // Orders
-
     Route::get('/user/orders', [AdminOrderController::class, 'fetchAllUserOrders']);
     Route::patch('/orders/{id}/status', [AdminOrderController::class, 'updateOrderStatus']);
-
     Route::get('/orders/search', [AdminOrderController::class, 'searchOrders']); // all orders
     Route::get('/orders/search/{orderId}', [AdminOrderController::class, 'selectOrder']); // single orders
     Route::get('/orders/info/{orderId}', [AdminOrderController::class, 'findFullInfo']); // order full info
+
+    // Reports
+    Route::post('/reports', [ReportController::class, 'getReport']);
    
 });
 
