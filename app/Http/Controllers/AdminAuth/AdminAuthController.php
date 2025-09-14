@@ -107,7 +107,8 @@ class AdminAuthController extends Controller
                 'message' => 'login successful',
                 'data' => [
                     'user' => $user,
-                    'token' => $token
+                    'token' => $token,
+                    'role' => 'admin'
                 ]
             ]);
         } catch (Exception $e) {
