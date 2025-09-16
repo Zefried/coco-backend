@@ -22,6 +22,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 Route::middleware(['auth:sanctum', AdminCheck::class])->prefix('admin')->group(function () {
     Route::post('/category/resource', [CategoryController::class, 'resource']);
+    Route::delete('/delete-category/{id}', [CategoryController::class, 'deleteCategory']);
     Route::post('/sub-category/resource', [SubCategoryController::class, 'resource']);
 
     // Read and fetch 

@@ -22,6 +22,7 @@ class AdminOrderController extends Controller
 
             // Fetch paginated orders with related users
             $orders = Order::with('user:id,name')
+                ->orderBy('created_at', 'desc') 
                 ->skip($skip)
                 ->take($perPage)
                 ->get(['id', 'user_id', 'products', 'delivery_status', 'payment_status']);

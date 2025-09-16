@@ -241,6 +241,8 @@ class CheckoutController extends Controller
                 'transaction_id' => $request->transactionId
             ]);
 
+            Cart::where('user_id', $userId)->delete();
+
             DB::commit();
 
             return response()->json([
