@@ -39,7 +39,7 @@ class ProductController extends Controller
                 'color'        => 'nullable|string|max:255',
                 'youtube_link' => 'nullable|string|max:255',
                 'images'           => 'required|array|max:5',
-                'images.*'         => 'image|mimes:jpeg,png,jpg,gif|max:2048',
+                'images.*'         => 'image|mimes:jpeg,png,jpg,gif|max:9999',
             ]);
 
             if ($validator->fails()) {

@@ -67,5 +67,48 @@ class ReportController extends Controller
         }
     }
 
+    // Pending Orders
+    public function fetchPendingOrders(Request $request) {
+        return $this->fetchOrdersByStatus('pending', $request);
+    }
+
+    // Shipped Orders
+    public function fetchShippedOrders(Request $request) {
+        return $this->fetchOrdersByStatus('shipped', $request);
+    }
+
+    // Completed Orders (delivered)
+    public function fetchCompletedOrders(Request $request) {
+        return $this->fetchOrdersByStatus('delivered', $request);
+    }
+
+    // Total Orders (any status)
+    public function fetchTotalOrders(Request $request) {
+        return $this->fetchOrdersByStatus(null, $request);
+    }
+
+    // Helper to avoid repeating code
+    private function fetchOrdersByStatus($status, Request $request) {
+        try {
+            $from = $request->input('start_date');
+            $to   = $request->input('end_date');
+
+            $query = Order::query();
+            if ($status) $query->where('delivery_status', $status);
+
+            if ($from && $to) {
+                $fromDate = Carbon::parse($from)->startOfDay();
+                $toDate   = Carbon::parse($to)->endOfDay();
+                $query->whereBetween('created_at', [$fromDate, $toDate]);
+            }
+
+            $orders = $query->with('user')->get();
+
+            return response()->json(['status'=>200, 'data'=>$orders]);
+        } catch (\Exception $e) {
+            return response()->json(['status'=>500, 'message'=>$e->getMessage()]);
+        }
+    }
+
 
 }

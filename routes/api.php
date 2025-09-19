@@ -50,7 +50,11 @@ Route::middleware(['auth:sanctum', AdminCheck::class])->prefix('admin')->group(f
 
     // Reports
     Route::post('/reports', [ReportController::class, 'getReport']);
-   
+    Route::get('/orders/pending', [ReportController::class, 'fetchPendingOrders']);
+    Route::get('/orders/shipped', [ReportController::class, 'fetchShippedOrders']);
+    Route::get('/orders/completed', [ReportController::class, 'fetchCompletedOrders']);
+    Route::get('/orders/total', [ReportController::class, 'fetchTotalOrders']);
+
 });
 
 
